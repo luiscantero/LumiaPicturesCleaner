@@ -12,11 +12,26 @@ namespace LumiaPicturesCleaner
     {
         private static int deletedFiles = 0;
         private static long totalBytes = 0;
+        private static bool previewMode = false;
 
         static void Main(string[] args)
         {
             // Use path from 1st argument or exe location.
             string path = GetParamOrExePath(args.FirstOrDefault());
+
+            if (args.Count() > 1)
+            {
+                if (args[1] == "/p")
+                {
+                    previewMode = true;
+                    Console.WriteLine("Preview mode ON.");
+                }
+                else
+                {
+                    Console.WriteLine($"Usage: {AppDomain.CurrentDomain.FriendlyName} [PATH [/p]]\n/p=Preview");
+                    return;
+                }
+            }
 
             CleanAll(path);
         }
@@ -32,10 +47,10 @@ namespace LumiaPicturesCleaner
 
             try
             {
-            // Delete all video thumbnails: *.tnl
-            ProcessToDelete(path, "*.tnl");
+                // Delete all video thumbnails: *.tnl
+                ProcessToDelete(path, "*.tnl");
 
-            Console.WriteLine("");
+                Console.WriteLine("");
 
                 ProcessFiles(path, "*.mp4.thm");
                 ProcessFiles(path, "*.nar");
@@ -47,7 +62,7 @@ namespace LumiaPicturesCleaner
                 return;
             }
 
-            Console.WriteLine($"Done deleting {deletedFiles} .tnl and unused .mp4.thm/.nar files, saved {(double)totalBytes / 1024 / 1024:0.##} MB!");
+            Console.WriteLine($"Deleted {deletedFiles} .tnl and unused .mp4.thm/.nar files, saved {(double)totalBytes / 1024 / 1024:0.##} MB!");
 
             // Time taken.
             watch.Stop();
@@ -63,7 +78,10 @@ namespace LumiaPicturesCleaner
 
                 IncreaseCounters(file);
 #if DELETE
-                File.Delete(file);
+                if (!previewMode)
+                {
+                    File.Delete(file);
+                }
 #endif
             });
         }
@@ -81,14 +99,14 @@ namespace LumiaPicturesCleaner
 
             for (int i = 0; i < files.Length; i++)
             {
-                Console.WriteLine($"Processing file {i + 1}/{files.Length}");
+                Console.Write($"\rProcessing file {i + 1}/{files.Length}          "); // Trailing spaces to overwrite former line.
 
-                string file = files[i];
-                DeleteIfNoImage(file);
+                DeleteIfNoImage(files[i]);
             }
 
             if (files.Length > 0)
             {
+                Console.WriteLine(""); // Added to compensate \r to print in one line.
                 Console.WriteLine("");
             }
         }
@@ -105,11 +123,15 @@ namespace LumiaPicturesCleaner
                 if (Directory.GetFiles(folder, prefix + "*.jpg").Length == 0 &&
                     Directory.GetFiles(folder, prefix + "*.dng").Length == 0)
                 {
+                    Console.WriteLine(""); // Added to compensate \r to print in one line.
                     Console.WriteLine($"Deleting {name} ...");
 
                     IncreaseCounters(file);
 #if DELETE
-                    File.Delete(file);
+                    if (!previewMode)
+                    {
+                        File.Delete(file);
+                    }
 #endif
                 }
             }
