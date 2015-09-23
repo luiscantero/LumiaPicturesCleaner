@@ -19,7 +19,7 @@ namespace LumiaPicturesCleaner
             // Use path from 1st argument or exe location.
             string path = GetParamOrExePath(args.FirstOrDefault());
 
-            if (args.Count() > 1)
+            if (args.Length > 1)
             {
                 if (args[1] == "/p")
                 {
@@ -34,6 +34,10 @@ namespace LumiaPicturesCleaner
             }
 
             CleanAll(path);
+
+            Console.WriteLine("");
+            Console.WriteLine("Press any key to continue . . .");
+            Console.ReadKey(true);
         }
 
         private static string GetParamOrExePath(string paramPath)
@@ -49,8 +53,6 @@ namespace LumiaPicturesCleaner
             {
                 // Delete all video thumbnails: *.tnl
                 ProcessToDelete(path, "*.tnl");
-
-                Console.WriteLine("");
 
                 ProcessFiles(path, "*.mp4.thm");
                 ProcessFiles(path, "*.nar");
@@ -72,7 +74,8 @@ namespace LumiaPicturesCleaner
 
         private static void ProcessToDelete(string path, string searchPattern)
         {
-            Array.ForEach(Directory.GetFiles(path, searchPattern, SearchOption.AllDirectories), (file) =>
+            string[] files = Directory.GetFiles(path, searchPattern, SearchOption.AllDirectories);
+            Array.ForEach(files, (file) =>
             {
                 Console.WriteLine($"Deleting {Path.GetFileName(file)} ...");
 
@@ -84,6 +87,11 @@ namespace LumiaPicturesCleaner
                 }
 #endif
             });
+
+            if(files.Length > 0)
+            {
+                Console.WriteLine("");
+            }
         }
 
         private static void IncreaseCounters(string file)
